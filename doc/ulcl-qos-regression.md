@@ -2,7 +2,7 @@
 
 ## Traffic influence
 
-The original offline/online blocks and original Go test functions remain unchanged. Six blocks are appended to `test/test-e2e-ulcl-ti.sh`: full, partial and mixed, each with offline/online subscription JSON. The added `TestTrafficInfluencePing` checks N6GW (`10.100.50.10`), MEC (`10.100.100.10`) and Internet (`1.1.1.1`) reachability before TI, after TI and after deletion. It reuses the original pinger and does not query PCF policies or charging records.
+The original offline/online blocks and original Go test cases remain unchanged. Six blocks are appended to `test/test-e2e-ulcl-ti.sh`: full, partial and mixed, each with offline/online subscription JSON. The added `TestTrafficInfluencePingFull`, `TestTrafficInfluencePingPartial` and `TestTrafficInfluencePingMixed` tests check N6GW (`10.100.50.10`), MEC (`10.100.100.10`) and Internet (`1.1.1.1`) reachability before TI, after TI and after deletion. It reuses the original pinger and does not query PCF policies or charging records.
 
 ```bash
 ./ci-test-e2e-ulcl.sh --build --test TestULCLTrafficInfluence
@@ -40,7 +40,7 @@ Added fixtures are `webconsole-subscription-data-mp-<UE>-<case>.json`, preservin
 
 Build images containing the intended [PCF #87](https://github.com/free5gc/pcf/pull/87), [SMF #253](https://github.com/free5gc/smf/pull/253) and, when testing the requestedUnit correction, [CHF #79](https://github.com/free5gc/chf/pull/79). The original `--build` flag selects the build compose file; it does not check out PR revisions or update old images automatically.
 
-The suites run eight TI sessions (two original and six added) and six MP sessions. The original host runner and API helpers are unchanged.
+The suites run eight TI sessions (two original and six added) and six MP sessions. The original host runner is unchanged. `tiOperation()` accepts an optional JSON filename and calls the existing TI API script, which resolves that filename under `test/json`. Omitting it still uses `ti-data.json`. The explicit Go test names select the cases without environment variables; PUT error handling and timeouts are centralized in the API script.
 
 Before interpreting Internet probe failures, check that each PSA-UPF default route uses its N6 interface, matching the interface selected by its UE MASQUERADE rule. Docker may select the internal network gateway on a container with multiple networks; in that case N6GW/MEC probes can work while UE Internet probes fail because the packet leaves through an interface without UE NAT. Correct that environment route before rerunning the suite.
 

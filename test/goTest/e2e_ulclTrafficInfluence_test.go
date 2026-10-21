@@ -1,7 +1,6 @@
 package test
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -87,8 +86,10 @@ func pingOneOneOneOne(t *testing.T) {
 	}
 }
 
-func tiOperation(t *testing.T, operation string) {
-	cmd := exec.Command("bash", "../api-udr-ti-data-action.sh", operation)
+func tiOperation(t *testing.T, operation string, jsonFile ...string) {
+	t.Helper()
+	args := append([]string{"../api-udr-ti-data-action.sh", operation}, jsonFile...)
+	cmd := exec.Command("bash", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Errorf("TI operation failed: expected %s success, but got %v, output: %s", operation, err, output)
@@ -96,18 +97,20 @@ func tiOperation(t *testing.T, operation string) {
 	time.Sleep(300 * time.Millisecond)
 }
 
-func TestTrafficInfluencePing(t *testing.T) {
-	scenario := os.Getenv("TI_SCENARIO")
-	n6gwDuringTI := true
-	switch scenario {
-	case "":
-		t.Skip("TI_SCENARIO is set by the added TI shell cases")
-	case "full", "partial":
-	case "mixed":
-		n6gwDuringTI = false
-	default:
-		t.Fatalf("Unknown TI scenario: %s", scenario)
-	}
+func TestTrafficInfluencePingFull(t *testing.T) {
+	testTrafficInfluencePing(t, "ti-data-full.json", true)
+}
+
+func TestTrafficInfluencePingPartial(t *testing.T) {
+	testTrafficInfluencePing(t, "ti-data-partial.json", true)
+}
+
+func TestTrafficInfluencePingMixed(t *testing.T) {
+	testTrafficInfluencePing(t, "ti-data-mixed.json", false)
+}
+
+func testTrafficInfluencePing(t *testing.T, jsonFile string, n6gwDuringTI bool) {
+	t.Helper()
 
 	// Clear TI before registering the UE and after any test failure.
 	tiOperation(t, "delete")
@@ -141,15 +144,7 @@ func TestTrafficInfluencePing(t *testing.T) {
 		pingTargets(t, true, false)
 	})
 
-	// Post this scenario's TI JSON using the same endpoint as the original test.
-	cmd := exec.Command("curl", "-sS", "--fail-with-body", "--connect-timeout", "5", "--max-time", "20",
-		"-X", "PUT", "-H", "Content-Type: application/json",
-		"--data-binary", "@../json/ti-data-"+scenario+".json",
-		"http://udr.free5gc.org:8000/nudr-dr/v2/application-data/influenceData/1")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("TI put failed: %v, output: %s", err, output)
-	}
-	time.Sleep(300 * time.Millisecond)
+	tiOperation(t, "put", jsonFile)
 
 	t.Run("After TI", func(t *testing.T) {
 		pingTargets(t, n6gwDuringTI, true)

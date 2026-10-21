@@ -56,7 +56,7 @@ fi
 # Additional TI cases: check N6GW, MEC and Internet ping behavior.
 suite_exit_code=$go_test_exit_code
 
-echo "test TestTrafficInfluencePing full with offline charging"
+echo "test TestTrafficInfluencePingFull with offline charging"
 
 # post ue (ci-test free-ran-ue) data to db
 ./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-full-offline.json
@@ -67,7 +67,7 @@ fi
 
 # run test
 cd goTest
-TI_SCENARIO=full go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePingFull$'
 go_test_exit_code=$?
 cd ..
 if [ $go_test_exit_code -ne 0 ]; then
@@ -81,7 +81,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "test TestTrafficInfluencePing full with online charging"
+echo "test TestTrafficInfluencePingFull with online charging"
 
 # post ue (ci-test free-ran-ue) data to db
 ./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-full-online.json
@@ -92,7 +92,7 @@ fi
 
 # run test
 cd goTest
-TI_SCENARIO=full go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePingFull$'
 go_test_exit_code=$?
 cd ..
 if [ $go_test_exit_code -ne 0 ]; then
@@ -106,7 +106,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "test TestTrafficInfluencePing partial with offline charging"
+echo "test TestTrafficInfluencePingPartial with offline charging"
 
 # post ue (ci-test free-ran-ue) data to db
 ./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-partial-offline.json
@@ -117,7 +117,7 @@ fi
 
 # run test
 cd goTest
-TI_SCENARIO=partial go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePingPartial$'
 go_test_exit_code=$?
 cd ..
 if [ $go_test_exit_code -ne 0 ]; then
@@ -131,7 +131,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "test TestTrafficInfluencePing partial with online charging"
+echo "test TestTrafficInfluencePingPartial with online charging"
 
 # post ue (ci-test free-ran-ue) data to db
 ./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-partial-online.json
@@ -142,7 +142,7 @@ fi
 
 # run test
 cd goTest
-TI_SCENARIO=partial go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePingPartial$'
 go_test_exit_code=$?
 cd ..
 if [ $go_test_exit_code -ne 0 ]; then
@@ -156,7 +156,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "test TestTrafficInfluencePing mixed with offline charging"
+echo "test TestTrafficInfluencePingMixed with offline charging"
 
 # post ue (ci-test free-ran-ue) data to db
 ./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-mixed-offline.json
@@ -167,7 +167,7 @@ fi
 
 # run test
 cd goTest
-TI_SCENARIO=mixed go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePingMixed$'
 go_test_exit_code=$?
 cd ..
 if [ $go_test_exit_code -ne 0 ]; then
@@ -181,7 +181,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "test TestTrafficInfluencePing mixed with online charging"
+echo "test TestTrafficInfluencePingMixed with online charging"
 
 # post ue (ci-test free-ran-ue) data to db
 ./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-mixed-online.json
@@ -192,7 +192,7 @@ fi
 
 # run test
 cd goTest
-TI_SCENARIO=mixed go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePingMixed$'
 go_test_exit_code=$?
 cd ..
 if [ $go_test_exit_code -ne 0 ]; then
