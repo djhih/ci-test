@@ -53,5 +53,158 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Additional TI cases: check N6GW, MEC and Internet ping behavior.
+suite_exit_code=$go_test_exit_code
+
+echo "test TestTrafficInfluencePing full with offline charging"
+
+# post ue (ci-test free-ran-ue) data to db
+./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-full-offline.json
+if [ $? -ne 0 ]; then
+    echo "Failed to post subscription data"
+    exit 1
+fi
+
+# run test
+cd goTest
+TI_SCENARIO=full go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go_test_exit_code=$?
+cd ..
+if [ $go_test_exit_code -ne 0 ]; then
+    suite_exit_code=1
+fi
+
+# delete ue (ci-test free-ran-ue) data from db
+./api-webconsole-subscribtion-data-action.sh delete json/webconsole-subscription-data-ti-full-offline.json
+if [ $? -ne 0 ]; then
+    echo "Failed to delete subscription data"
+    exit 1
+fi
+
+echo "test TestTrafficInfluencePing full with online charging"
+
+# post ue (ci-test free-ran-ue) data to db
+./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-full-online.json
+if [ $? -ne 0 ]; then
+    echo "Failed to post subscription data"
+    exit 1
+fi
+
+# run test
+cd goTest
+TI_SCENARIO=full go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go_test_exit_code=$?
+cd ..
+if [ $go_test_exit_code -ne 0 ]; then
+    suite_exit_code=1
+fi
+
+# delete ue (ci-test free-ran-ue) data from db
+./api-webconsole-subscribtion-data-action.sh delete json/webconsole-subscription-data-ti-full-online.json
+if [ $? -ne 0 ]; then
+    echo "Failed to delete subscription data"
+    exit 1
+fi
+
+echo "test TestTrafficInfluencePing partial with offline charging"
+
+# post ue (ci-test free-ran-ue) data to db
+./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-partial-offline.json
+if [ $? -ne 0 ]; then
+    echo "Failed to post subscription data"
+    exit 1
+fi
+
+# run test
+cd goTest
+TI_SCENARIO=partial go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go_test_exit_code=$?
+cd ..
+if [ $go_test_exit_code -ne 0 ]; then
+    suite_exit_code=1
+fi
+
+# delete ue (ci-test free-ran-ue) data from db
+./api-webconsole-subscribtion-data-action.sh delete json/webconsole-subscription-data-ti-partial-offline.json
+if [ $? -ne 0 ]; then
+    echo "Failed to delete subscription data"
+    exit 1
+fi
+
+echo "test TestTrafficInfluencePing partial with online charging"
+
+# post ue (ci-test free-ran-ue) data to db
+./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-partial-online.json
+if [ $? -ne 0 ]; then
+    echo "Failed to post subscription data"
+    exit 1
+fi
+
+# run test
+cd goTest
+TI_SCENARIO=partial go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go_test_exit_code=$?
+cd ..
+if [ $go_test_exit_code -ne 0 ]; then
+    suite_exit_code=1
+fi
+
+# delete ue (ci-test free-ran-ue) data from db
+./api-webconsole-subscribtion-data-action.sh delete json/webconsole-subscription-data-ti-partial-online.json
+if [ $? -ne 0 ]; then
+    echo "Failed to delete subscription data"
+    exit 1
+fi
+
+echo "test TestTrafficInfluencePing mixed with offline charging"
+
+# post ue (ci-test free-ran-ue) data to db
+./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-mixed-offline.json
+if [ $? -ne 0 ]; then
+    echo "Failed to post subscription data"
+    exit 1
+fi
+
+# run test
+cd goTest
+TI_SCENARIO=mixed go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go_test_exit_code=$?
+cd ..
+if [ $go_test_exit_code -ne 0 ]; then
+    suite_exit_code=1
+fi
+
+# delete ue (ci-test free-ran-ue) data from db
+./api-webconsole-subscribtion-data-action.sh delete json/webconsole-subscription-data-ti-mixed-offline.json
+if [ $? -ne 0 ]; then
+    echo "Failed to delete subscription data"
+    exit 1
+fi
+
+echo "test TestTrafficInfluencePing mixed with online charging"
+
+# post ue (ci-test free-ran-ue) data to db
+./api-webconsole-subscribtion-data-action.sh post json/webconsole-subscription-data-ti-mixed-online.json
+if [ $? -ne 0 ]; then
+    echo "Failed to post subscription data"
+    exit 1
+fi
+
+# run test
+cd goTest
+TI_SCENARIO=mixed go test -v -vet=off -count=1 -timeout=5m -run '^TestTrafficInfluencePing$'
+go_test_exit_code=$?
+cd ..
+if [ $go_test_exit_code -ne 0 ]; then
+    suite_exit_code=1
+fi
+
+# delete ue (ci-test free-ran-ue) data from db
+./api-webconsole-subscribtion-data-action.sh delete json/webconsole-subscription-data-ti-mixed-online.json
+if [ $? -ne 0 ]; then
+    echo "Failed to delete subscription data"
+    exit 1
+fi
+
 # return the test exit code
-exit $go_test_exit_code
+exit $suite_exit_code

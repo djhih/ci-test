@@ -1,6 +1,7 @@
 package test
 
 import (
+	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -93,4 +94,69 @@ func tiOperation(t *testing.T, operation string) {
 		t.Errorf("TI operation failed: expected %s success, but got %v, output: %s", operation, err, output)
 	}
 	time.Sleep(300 * time.Millisecond)
+}
+
+func TestTrafficInfluencePing(t *testing.T) {
+	scenario := os.Getenv("TI_SCENARIO")
+	n6gwDuringTI := true
+	switch scenario {
+	case "":
+		t.Skip("TI_SCENARIO is set by the added TI shell cases")
+	case "full", "partial":
+	case "mixed":
+		n6gwDuringTI = false
+	default:
+		t.Fatalf("Unknown TI scenario: %s", scenario)
+	}
+
+	// Clear TI before registering the UE and after any test failure.
+	tiOperation(t, "delete")
+	fru, err := freeRanUe.NewFreeRanUe()
+	if err != nil {
+		t.Fatalf("Failed to create FreeRanUe: %v", err)
+	}
+	if err = fru.Activate(); err != nil {
+		t.Fatalf("Failed to activate FreeRanUe: %v", err)
+	}
+	defer func() {
+		if err := fru.Deactivate(); err != nil {
+			t.Errorf("Failed to deactivate FreeRanUe: %v", err)
+		}
+	}()
+	defer tiOperation(t, "delete")
+
+	pingTargets := func(t *testing.T, n6gwSuccess, mecSuccess bool) {
+		err := pinger.Pinger(N6GW_IP, NIC_1)
+		if (err == nil) != n6gwSuccess {
+			t.Errorf("Ping n6gw: expected success=%t, got error=%v", n6gwSuccess, err)
+		}
+		err = pinger.Pinger(MEC_IP, NIC_1)
+		if (err == nil) != mecSuccess {
+			t.Errorf("Ping mec: expected success=%t, got error=%v", mecSuccess, err)
+		}
+		pingOneOneOneOne(t)
+	}
+
+	t.Run("Before TI", func(t *testing.T) {
+		pingTargets(t, true, false)
+	})
+
+	// Post this scenario's TI JSON using the same endpoint as the original test.
+	cmd := exec.Command("curl", "-sS", "--fail-with-body", "--connect-timeout", "5", "--max-time", "20",
+		"-X", "PUT", "-H", "Content-Type: application/json",
+		"--data-binary", "@../json/ti-data-"+scenario+".json",
+		"http://udr.free5gc.org:8000/nudr-dr/v2/application-data/influenceData/1")
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("TI put failed: %v, output: %s", err, output)
+	}
+	time.Sleep(300 * time.Millisecond)
+
+	t.Run("After TI", func(t *testing.T) {
+		pingTargets(t, n6gwDuringTI, true)
+	})
+
+	tiOperation(t, "delete")
+	t.Run("Reset TI", func(t *testing.T) {
+		pingTargets(t, true, false)
+	})
 }
