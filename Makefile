@@ -4,6 +4,9 @@ DOCKER_IMAGE_TAG = 'latest'
 
 .PHONY: base all-base nfs
 nfs: all-base
+	docker compose -f composes/build/docker-compose-it.yaml build
+	docker compose -f composes/build/docker-compose-e2e-basic.yaml build
+	docker compose -f composes/build/docker-compose-e2e-ulcl.yaml build
 
 base:
 	docker build -t ${DOCKER_IMAGE_OWNER}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} ./dockerfiles/base
