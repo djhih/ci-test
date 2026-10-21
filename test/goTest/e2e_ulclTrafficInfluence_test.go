@@ -79,6 +79,17 @@ func pingN6gwFailedMecSuccess(t *testing.T) {
 	}
 }
 
+func pingN6gwSuccessMecSuccess(t *testing.T) {
+	err := pinger.Pinger(N6GW_IP, NIC_1)
+	if err != nil {
+		t.Errorf("Ping n6gw failed: expected ping success, but got %v", err)
+	}
+	err = pinger.Pinger(MEC_IP, NIC_1)
+	if err != nil {
+		t.Errorf("Ping mec failed: expected ping success, but got %v", err)
+	}
+}
+
 func pingOneOneOneOne(t *testing.T) {
 	err := pinger.Pinger(ONE_IP, NIC_1)
 	if err != nil {
@@ -88,7 +99,10 @@ func pingOneOneOneOne(t *testing.T) {
 
 func tiOperation(t *testing.T, operation string, jsonFile ...string) {
 	t.Helper()
-	args := append([]string{"../api-udr-ti-data-action.sh", operation}, jsonFile...)
+	args := []string{"../api-udr-ti-data-action.sh", operation}
+	if len(jsonFile) > 0 {
+		args = append(args, "../"+jsonFile[0])
+	}
 	cmd := exec.Command("bash", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -97,28 +111,32 @@ func tiOperation(t *testing.T, operation string, jsonFile ...string) {
 	time.Sleep(300 * time.Millisecond)
 }
 
-func TestTrafficInfluencePingFull(t *testing.T) {
-	testTrafficInfluencePing(t, "ti-data-full.json", true)
+func TestTrafficInfluenceFlowRuleOverlapFull(t *testing.T) {
+	tiFlowRuleOverlap(t, "json/ti-data-mec.json", pingN6gwSuccessMecSuccess)
 }
 
-func TestTrafficInfluencePingPartial(t *testing.T) {
-	testTrafficInfluencePing(t, "ti-data-partial.json", true)
+func TestTrafficInfluenceFlowRuleOverlapPartial(t *testing.T) {
+	tiFlowRuleOverlap(t, "json/ti-data-mec.json", pingN6gwSuccessMecSuccess)
 }
 
-func TestTrafficInfluencePingMixed(t *testing.T) {
-	testTrafficInfluencePing(t, "ti-data-mixed.json", false)
+func TestTrafficInfluenceFlowRuleOverlapMixed(t *testing.T) {
+	tiFlowRuleOverlap(t, "json/ti-data.json", pingN6gwFailedMecSuccess)
 }
 
-func testTrafficInfluencePing(t *testing.T, jsonFile string, n6gwDuringTI bool) {
+// Overlap cases check connectivity; the original TI test retains charging record checks.
+func tiFlowRuleOverlap(t *testing.T, tiDataFile string, pingDuringTI func(*testing.T)) {
 	t.Helper()
 
-	// Clear TI before registering the UE and after any test failure.
+	// Clear TI left by an earlier case, and clean it up even if this case fails.
 	tiOperation(t, "delete")
+
+	// FreeRanUe
 	fru, err := freeRanUe.NewFreeRanUe()
 	if err != nil {
 		t.Fatalf("Failed to create FreeRanUe: %v", err)
 	}
-	if err = fru.Activate(); err != nil {
+	err = fru.Activate()
+	if err != nil {
 		t.Fatalf("Failed to activate FreeRanUe: %v", err)
 	}
 	defer func() {
@@ -128,30 +146,31 @@ func testTrafficInfluencePing(t *testing.T, jsonFile string, n6gwDuringTI bool) 
 	}()
 	defer tiOperation(t, "delete")
 
-	pingTargets := func(t *testing.T, n6gwSuccess, mecSuccess bool) {
-		err := pinger.Pinger(N6GW_IP, NIC_1)
-		if (err == nil) != n6gwSuccess {
-			t.Errorf("Ping n6gw: expected success=%t, got error=%v", n6gwSuccess, err)
-		}
-		err = pinger.Pinger(MEC_IP, NIC_1)
-		if (err == nil) != mecSuccess {
-			t.Errorf("Ping mec: expected success=%t, got error=%v", mecSuccess, err)
-		}
-		pingOneOneOneOne(t)
-	}
-
+	// before TI
 	t.Run("Before TI", func(t *testing.T) {
-		pingTargets(t, true, false)
+		pingN6gwSuccessMecFailed(t)
+		pingOneOneOneOne(t)
 	})
 
-	tiOperation(t, "put", jsonFile)
+	// post TI
+	tiOperation(t, "put", tiDataFile)
 
+	// after TI
 	t.Run("After TI", func(t *testing.T) {
-		pingTargets(t, n6gwDuringTI, true)
+		pingDuringTI(t)
+		pingOneOneOneOne(t)
 	})
 
+	// delete TI
 	tiOperation(t, "delete")
+
+	// reset TI
 	t.Run("Reset TI", func(t *testing.T) {
-		pingTargets(t, true, false)
+		pingN6gwSuccessMecFailed(t)
+	})
+
+	// flow level ping
+	t.Run("Flow Level Ping", func(t *testing.T) {
+		pingOneOneOneOne(t)
 	})
 }

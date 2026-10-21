@@ -3,16 +3,16 @@
 ##########################
 #
 # usage:
-# ./api-udr-ti-data-action.sh <action> [json-file]
+# ./api-udr-ti-data-action.sh <action> [ti_json_path]
 #
-# e.g. ./api-udr-ti-data-action.sh put ti-data-full.json
-# JSON files are resolved under test/json; the default is ti-data.json.
+# e.g. ./api-udr-ti-data-action.sh put json/ti-data-mec.json
+# The optional JSON path is relative to the working directory; the default is json/ti-data.json beside this script.
 #
 ##########################
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TI_DATA_JSON="$SCRIPT_DIR/json/${2:-ti-data.json}"
+TI_DATA_JSON="${2:-$SCRIPT_DIR/json/ti-data.json}"
 
 # ti data request
 case "$1" in
@@ -31,7 +31,7 @@ case "$1" in
         ;;
     *)
         echo "error: invalid parameter"
-        echo "usage: $0 [put|get|delete] [json-file]"
+        echo "usage: $0 [put|get|delete] [ti_json_path]"
         exit 1
         ;;
 esac

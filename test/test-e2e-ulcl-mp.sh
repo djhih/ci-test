@@ -9,6 +9,8 @@
 #
 ##########################
 
+suite_exit_code=0
+
 echo "test $1"
 
 target_webconsole_subscription_data_file=""
@@ -34,7 +36,9 @@ fi
 # run test
 cd goTest
 go test -v -vet=off -run $1
-go_test_exit_code=$?
+if [ $? -ne 0 ]; then
+    suite_exit_code=1
+fi
 cd ..
 
 # delete ue data from db
@@ -44,8 +48,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Additional static path overlap cases (the original default case above is unchanged).
-suite_exit_code=$go_test_exit_code
+# Additional static path overlap cases (using the same test as the original case above).
 
 echo "test $1 full"
 
@@ -71,12 +74,11 @@ fi
 
 # run test
 cd goTest
-go test -v -vet=off -count=1 -timeout=3m -run "^$1$"
-go_test_exit_code=$?
-cd ..
-if [ $go_test_exit_code -ne 0 ]; then
+go test -v -vet=off -run $1
+if [ $? -ne 0 ]; then
     suite_exit_code=1
 fi
+cd ..
 
 # delete ue data from db
 ./api-webconsole-subscribtion-data-action.sh delete $target_webconsole_subscription_data_file
@@ -109,12 +111,11 @@ fi
 
 # run test
 cd goTest
-go test -v -vet=off -count=1 -timeout=3m -run "^$1$"
-go_test_exit_code=$?
-cd ..
-if [ $go_test_exit_code -ne 0 ]; then
+go test -v -vet=off -run $1
+if [ $? -ne 0 ]; then
     suite_exit_code=1
 fi
+cd ..
 
 # delete ue data from db
 ./api-webconsole-subscribtion-data-action.sh delete $target_webconsole_subscription_data_file
