@@ -52,6 +52,8 @@ docker rm -f mongodb ci-mongodb 2>/dev/null || true
 # Up the containers using the selected compose file
 if ! docker compose -f "$TARGET_COMPOSE_FILE" up -d --wait --wait-timeout "$TARGET_TIMEOUT"; then
     echo "Error: Failed to start containers using $TARGET_COMPOSE_FILE"
+    docker compose -f "$TARGET_COMPOSE_FILE" logs
+    docker compose -f "$TARGET_COMPOSE_FILE" down --remove-orphans -v || true
     exit 1
 fi
 
